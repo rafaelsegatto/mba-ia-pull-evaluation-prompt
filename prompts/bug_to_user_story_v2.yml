@@ -1,25 +1,5 @@
-# Prompt OTIMIZADO (v2) do desafio "Bug to User Story".
-# Criado a partir de bug_to_user_story_v1.yml com as técnicas:
-#   - Few-shot Learning (7 exemplos de entrada -> saída)
-#   - Role Prompting (persona de Product Manager)
-#   - Chain of Thought (análise interna antes de responder)
-# Correções em relação à v1:
-#   - {bug_report} não é mais duplicado (aparece apenas no user_prompt)
-#   - Instruções claras, formato exigido, regras de comportamento e edge cases definidos
-# Iteração 2 (após avaliação 0.7876):
-#   - Regras de completude + anti-alucinação + clareza + sem título + 4º exemplo
-# Iteração 3 (após avaliação 0.7971):
-#   - Conversão de performance explícita, correções técnicas padrão liberadas,
-#     "Dado que" focado no bug, Exemplo de Cálculo, 5º exemplo (ex 7)
-# Iteração 4 (após avaliação 0.8192 — só Clarity reprova em 0.79):
-#   - Tipos de resposta por tamanho (SIMPLES = story + exatamente 5 critérios e
-#     nada mais — as references simples têm só isso; juiz punia seções extras)
-#   - Anti-redundância e palavras concretas (juiz punia "experiência de visualização
-#     idêntica", repetições e jargão na story)
-#   - Escopo explícito (quem entra/no que conta) — juiz marcou ambiguidade
-#   - Prevenção ≠ tarefa de implementação (isso vai no Contexto Técnico)
-#   - 6º exemplo: ex 5 (Safari, paridade de qualidade/velocidade entre navegadores)
-#   - 7º exemplo: ex 8 (permissões, os dois lados do acesso + Contexto de Segurança)
+# Prompt otimizado (v2): converte relatos de bugs em User Stories formatadas.
+# Estrutura: formato de saída, regras de comportamento, raciocínio e exemplos few-shot.
 
 bug_to_user_story_v2:
   description: "Prompt otimizado para converter relatos de bugs em User Stories formatadas"

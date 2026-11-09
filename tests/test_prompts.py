@@ -1,14 +1,6 @@
 """
-Testes automatizados para validação de prompts.
-
-Valida o prompt otimizado (prompts/bug_to_user_story_v2.yml) quanto aos
-requisitos do desafio:
-  - system_prompt presente e não vazio
-  - persona definida (Role Prompting)
-  - formato de saída exigido (Markdown / User Story padrão)
-  - exemplos de entrada/saída (Few-shot Learning)
-  - ausência de [TODO] esquecido
-  - pelo menos 2 técnicas nos metadados
+Testes automatizados para validação do prompt otimizado
+(prompts/bug_to_user_story_v2.yml).
 
 Executar com: pytest tests/test_prompts.py -v
 """
@@ -24,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from utils import validate_prompt_structure
 
-# Caminho do prompt otimizado (o arquivo validado pela entrega)
+# Caminho do prompt otimizado
 PROMPT_FILE = Path(__file__).parent.parent / "prompts" / "bug_to_user_story_v2.yml"
 PROMPT_KEY = "bug_to_user_story_v2"
 
@@ -61,7 +53,6 @@ class TestPrompts:
         """Verifica se o prompt define uma persona (ex: "Você é um Product Manager")."""
         system_prompt = get_prompt()["system_prompt"]
 
-        # Role Prompting: o prompt deve abrir com uma persona explícita
         assert re.search(
             r"você é um product manager",
             system_prompt,
@@ -88,7 +79,6 @@ class TestPrompts:
         """Verifica se o prompt contém exemplos de entrada/saída (técnica Few-shot)."""
         system_prompt = get_prompt()["system_prompt"].lower()
 
-        # Few-shot Learning: 2-3 exemplos completos de entrada -> saída
         count_entradas = system_prompt.count("**entrada:**")
         count_saidas = system_prompt.count("**saída:**")
 
