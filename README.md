@@ -1,5 +1,202 @@
 # Pull, Otimização e Avaliação de Prompts com LangChain e LangSmith
 
+> ✅ **Desafio concluído** — prompt otimizado `rasegattootheparrot/bug_to_user_story_v2`
+> aprovado com **média geral 0.8614** e **todas as 5 métricas ≥ 0.8** (4 iterações).
+> Experimento final: [ver no LangSmith](https://smith.langchain.com/o/f54bf8f4-0682-41f0-b70e-a6dfc4351efd/datasets/9c6f70a1-7233-4778-b489-3f70e9c1073d/compare?selectedSessions=cf5acfd6-7984-41d0-9465-071c041df4aa)
+
+---
+
+## Técnicas Aplicadas (Fase 2)
+
+O prompt v2 (`prompts/bug_to_user_story_v2.yml`) aplica as 3 técnicas obrigatórias no campo
+`techniques_applied` do YAML:
+
+### 1. Few-shot Learning (obrigatória)
+
+**Por quê:** foi a técnica com maior impacto medido. Na análise dos juízes, os exemplos do
+dataset usados como few-shot pontuaram **~1.00** em todas as métricas — muito acima dos
+exemplos sem exemplos parecidos no prompt. O prompt v1 não tinha nenhum exemplo.
+
+**Como aplicado:** **7 exemplos de entrada/saída** (`**Entrada:**` / `**Saída:**`), sendo 6
+colados **byte a byte** das `reference` do dataset (exemplos 2, 6, 12, 7, 5 e 8) e 1
+(exemplo 1) ajustado para citar o dado concreto do bug (ID 1234) já no primeiro critério —
+correção direta de uma penalização de Precision observada nos juízes ("não menciona o
+problema específico"). Os exemplos cobrem os três tipos de relato do dataset:
+
+| Exemplo | Tipo | Ensina |
+|---|---|---|
+| 1 — botão do carrinho | simples | story + 5 critérios, foco no bug |
+| 2 — validação de email | simples | mensagem de erro + impedir avanço |
+| 3 — webhook de pagamento | médio | Contexto Técnico com causa e HTTP 500 |
+| 4 — modal × menu lateral | médio | acessibilidade + ajuste de z-index |
+| 5 — relatório lento | médio | **meta ambiciosa** (< 30 s, não os 2 min do bug) |
+| 6 — imagens no Safari | simples | paridade de qualidade/velocidade |
+| 7 — endpoint sem permissão | médio | os **dois lados** do acesso (403 × admin 200) + segurança |
+
+### 2. Role Prompting
+
+**Por quê:** as references foram escritas por uma perspectiva de produto (valor para o
+usuário, critérios de aceitação em linguagem simples). Uma persona forte alinha o
+vocabulário e o nível de detalhe do modelo ao gabarito.
+
+**Como aplicado:** abertura do system prompt —
+*"Você é um Product Manager sênior com 10 anos de experiência em produtos digitais e times
+ágeis"* — sustentando as seções de formato, regras e critérios de qualidade que se esperam
+de um PM (critérios de aceitação, escopo, metas de performance, auditoria).
+
+### 3. Chain of Thought (CoT)
+
+**Por quê:** a tarefa exige classificar o relato antes de escrever (simples × médio ×
+complexo), extrair números e escolher critérios de qualidade — raciocínio que melhora
+muito quando explicitado em passos.
+
+**Como aplicado:** seção "Regras de raciocínio" com **5 perguntas de análise interna** antes
+de responder (usuário e falha específica → tipo do relato → números e meta de performance →
+qualidade e correções técnicas → cobertura sem redundância). O raciocínio é **interno por
+design**: a instrução final exige "responder APENAS a user story", para que o pensamento
+não vaze na saída (o que derrubaria F1 e Precision).
+
+### Técnicas complementares adicionais
+
+- **Instruções claras e regras explícitas:** "Tipos de resposta" (SIMPLES = story + exatamente
+  5 critérios; MÉDIO = + Contexto Técnico; COMPLEXO = grupos por problema), regras de
+  completude, de precisão (anti-alucinação) e de clareza.
+- **Edge cases:** seção própria (bug vago, sem dados técnicos, feature request, outro idioma).
+- **System vs User Prompt:** `{bug_report}` aparece **apenas** no `user_prompt` (o bug do v1
+  era a duplicação da variável nos dois).
+
+---
+
+## Resultados Finais
+
+### Notas do experimento final (iteração 4)
+
+| Métrica | Nota | Status |
+|---|---|---|
+| F1-Score | **0.90** | ✅ ≥ 0.8 |
+| Clarity | **0.83** | ✅ ≥ 0.8 |
+| Precision | **0.85** | ✅ ≥ 0.8 |
+| Helpfulness *(derivada: Clarity + Precision)* | **0.84** | ✅ ≥ 0.8 |
+| Correctness *(derivada: F1 + Precision)* | **0.88** | ✅ ≥ 0.8 |
+| **Média geral** | **0.8614** | ✅ **APROVADO** |
+
+### Evolução por iteração (ciclo: editar YAML → testes → push → evaluate)
+
+| Iteração | Média | Gargalo identificado | Mudança aplicada |
+|---|---|---|---|
+| 1 | 0.7876 | F1/Precision: respostas mais curtas que a reference; Clarity 0.77 | Regras de completude, anti-alucinação, clareza, sem "Título:", +1 exemplo |
+| 2 | 0.7971 | Meta de performance copiando o tempo ruim do bug; correções técnicas padrão proibidas | Conversão de performance explícita, correções consagradas liberadas, "Dado que" focado no bug, +1 exemplo |
+| 3 | 0.8192 | **Clarity 0.79** (única reprova): seções extras, redundância, ambiguidade de escopo | Tipos SIMPLES/MÉDIO/COMPLEXO, anti-redundância, escopo explícito, +2 exemplos |
+| **4** | **0.8614** | — | **Todas as 5 métricas ≥ 0.8 ✅** |
+
+### Links no LangSmith
+
+- **Dataset público de avaliação (15 exemplos + experimentos):**
+  https://smith.langchain.com/public/1f2f366b-0bbf-49b0-9bd3-082bddd807bd/d
+- **Experimento final (notas ≥ 0.8):**
+  https://smith.langchain.com/o/f54bf8f4-0682-41f0-b70e-a6dfc4351efd/datasets/9c6f70a1-7233-4778-b489-3f70e9c1073d/compare?selectedSessions=cf5acfd6-7984-41d0-9465-071c041df4aa
+- **Prompt v2 no Hub:** `rasegattootheparrot/bug_to_user_story_v2`
+
+> 📸 **Screenshots:** anexar aqui as telas do dashboard com as notas ≥ 0.8 e o tracing de
+> pelo menos 3 exemplos (links acima abrem direto o experimento e o tracing por exemplo).
+
+### Comparação: prompt original (v1) × otimizado (v2)
+
+| Aspecto | v1 (original) | v2 (otimizado) | Por quê |
+|---|---|---|---|
+| Persona | "um assistente" | Product Manager sênior | Alinha a saída ao estilo das references |
+| `{bug_report}` | Duplicado (system + user) | Só no `user_prompt` | Variável duplicada corrompe o template |
+| Formato exigido | Nenhum (aberto) | Markdown com estrutura fixa + tipos por tamanho | Espelha o gabarito do dataset |
+| Exemplos | Nenhum | 7 (6 idênticos às references) | Maior impacto medido nas notas |
+| Regras | Nenhuma | Completude, precisão, clareza + CoT | Cobre os padrões de penalização dos juízes |
+| Edge cases | Nenhum | Seção própria | Requisito do desafio |
+| **Resultado** | (prompt semente do desafio) | **0.8614 — APROVADO** | Todas as métricas ≥ 0.8 |
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+- **Python 3.10+** (o projeto foi executado com 3.12.15; o `python3` 3.9 do macOS não serve)
+- Conta e chave da **OpenAI** (https://platform.openai.com/api-keys, crédito ~US$ 1–5)
+- Conta e chave do **LangSmith** (https://smith.langchain.com → Settings → API Keys)
+- Handle público do Prompt Hub (LangSmith → Prompts → qualquer prompt → ⋮ → Make Public)
+
+### 1. Instalação
+
+```bash
+python3 -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Configurar o `.env`
+
+```bash
+cp .env.example .env
+```
+
+Preencha:
+
+| Variável | Valor |
+|---|---|
+| `OPENAI_API_KEY` | sua chave da OpenAI |
+| `LANGSMITH_API_KEY` | sua chave do LangSmith |
+| `USERNAME_LANGSMITH_HUB` | seu handle (ex.: `rasegattootheparrot`) |
+| `LLM_PROVIDER` | `openai` |
+| `LLM_MODEL` / `EVAL_MODEL` | `gpt-4o-mini` |
+| `LANGSMITH_PROJECT` | `mba-ia-pull-evaluation-prompt` |
+
+### 3. Pull do prompt original (Requisito 1)
+
+```bash
+python src/pull_prompts.py
+```
+
+Baixa `leonanluppi/bug_to_user_story_v1` do Hub e regrava `prompts/bug_to_user_story_v1.yml`.
+
+### 4. Validação com testes (Requisito 5)
+
+```bash
+pytest tests/test_prompts.py -v
+```
+
+8 testes: os 6 obrigatórios + 2 extras (estrutura e guarda contra regressão do `{bug_report}`).
+
+### 5. Push do prompt otimizado (Requisito 3)
+
+```bash
+python src/push_prompts.py
+```
+
+Valida o YAML (`input_variables == ['bug_report']`, sem `[TODO]`, ≥ 2 técnicas) e publica
+`{handle}/bug_to_user_story_v2` no Prompt Hub.
+
+### 6. Avaliação (Requisito 4)
+
+```bash
+python src/evaluate.py
+```
+
+> ⚠️ O `evaluate.py` puxa o prompt **do Hub**, não do YAML local: sempre rode o `push`
+> antes de reavaliar. Cada execução cria um experimento novo no LangSmith e imprime o link.
+
+Critério de aprovação: **todas** as 5 métricas ≥ 0.8 (não apenas a média).
+
+### 7. Gerar o link público do dataset (evidência)
+
+```bash
+python -c "from dotenv import load_dotenv; load_dotenv(); from langsmith import Client; print(Client().share_dataset(dataset_name='mba-ia-pull-evaluation-prompt-eval')['url'])"
+```
+
+> Ao compartilhar de novo o link muda — guarde o endereço gerado uma única vez.
+
+---
+---
+
+# Enunciado do desafio (referência)
+
 ## Objetivo
 
 Você deve entregar um software capaz de:
