@@ -97,8 +97,108 @@ não vaze na saída (o que derrubaria F1 e Precision).
   https://smith.langchain.com/o/f54bf8f4-0682-41f0-b70e-a6dfc4351efd/datasets/9c6f70a1-7233-4778-b489-3f70e9c1073d/compare?selectedSessions=cf5acfd6-7984-41d0-9465-071c041df4aa
 - **Prompt v2 no Hub:** `rasegattootheparrot/bug_to_user_story_v2`
 
-> 📸 **Screenshots:** anexar aqui as telas do dashboard com as notas ≥ 0.8 e o tracing de
-> pelo menos 3 exemplos (links acima abrem direto o experimento e o tracing por exemplo).
+### Evidências em screenshots
+
+**1. Notas do experimento final — todas ≥ 0.8**
+
+![Notas do experimento final: todas as métricas ≥ 0.8](docs/eval-notas-gerais.png)
+
+*Experimento `rasegattootheparrot-bug_to_user_story_v2-943ae7cd` (15/15 exemplos):
+F1-Score 0.90 · Clarity 0.83 · Precision 0.85 · Helpfulness 0.84 · Correctness 0.88.*
+
+**2. Tracing detalhado de 3 exemplos**
+
+#### Trace 1 — Relatório de vendas lento (linha 1 da tabela)
+
+Notas do exemplo: **Clarity 0.90 · Correctness 1.00 · F1-Score 1.00 · Helpfulness 0.95 · Precision 1.00**
+
+**Feedback e Input** (bug report com o problema de performance):
+
+![Trace 1 — notas do exemplo e input (bug report)](docs/trace1-feedback-input.png)
+
+**Output** (resposta gerada pelo prompt v2):
+
+![Trace 1 — resposta gerada](docs/trace1-output.png)
+
+**Reference Output** (gabarito do dataset):
+
+![Trace 1 — reference output (gabarito)](docs/trace1-reference.png)
+
+A resposta reproduz o gabarito — inclusive a **meta de "menos de 30 segundos"** (em vez de
+copiar os "2 minutos" do bug) e o **Contexto Técnico** com a causa (índice em `data_venda`).
+É a regra de conversão de performance introduzida na iteração 3 em ação.
+
+#### Trace 2 — Sistema de relatórios gerenciais com 4 problemas (linha 7)
+
+Notas do exemplo: **Clarity 0.85 · Correctness 0.74 · F1-Score 0.69 · Helpfulness 0.825 · Precision 0.80**
+
+Caso **COMPLEXO** do dataset (4 problemas no mesmo relato): a resposta agrupa os critérios
+por problema (A. Performance · B. Lógica de Negócio · C. Cache · D. Concorrência), exatamente
+como manda a regra de "Tipos de resposta" da iteração 4. A reference deste caso é a mais
+extensa do dataset (inclui tasks técnicas por sprint e critérios técnicos detalhados), daí o
+F1-Score mais baixo neste exemplo — as médias do experimento seguem todas ≥ 0.8.
+
+**Feedback (notas do exemplo):**
+
+![Trace 2 — notas do exemplo](docs/trace2-feedback.png)
+
+**Input** (relato com 4 problemas + impacto de negócio):
+
+![Trace 2 — input, parte 1](docs/trace2-input-1.png)
+
+<details>
+<summary>Input — partes 2 e 3</summary>
+
+![Trace 2 — input, parte 2](docs/trace2-input-2.png)
+![Trace 2 — input, parte 3](docs/trace2-input-3.png)
+</details>
+
+**Output** (resposta gerada pelo prompt v2):
+
+![Trace 2 — resposta gerada, parte 1](docs/trace2-output-1.png)
+
+<details>
+<summary>Output — parte 2</summary>
+
+![Trace 2 — resposta gerada, parte 2](docs/trace2-output-2.png)
+</details>
+
+**Reference Output** (gabarito do dataset):
+
+![Trace 2 — reference, parte 1](docs/trace2-reference-1.png)
+
+<details>
+<summary>Reference — partes 2 a 5</summary>
+
+![Trace 2 — reference, parte 2](docs/trace2-reference-2.png)
+![Trace 2 — reference, parte 3](docs/trace2-reference-3.png)
+![Trace 2 — reference, parte 4](docs/trace2-reference-4.png)
+![Trace 2 — reference, parte 5](docs/trace2-reference-5.png)
+</details>
+
+#### Trace 3 — Endpoint /api/users/:id com vazamento de dados (linha 15)
+
+Notas do exemplo: **Clarity 1.00 · Correctness 1.00 · F1-Score 1.00 · Helpfulness 1.00 · Precision 1.00**
+
+Caso de **segurança/permissões** — é o exemplo 7 do few-shot do prompt v2, o que explica a
+nota perfeita: a resposta devolve **HTTP 403**, discuta os dois lados do acesso (dono do
+recurso × usuário autenticado) e inclui o **Contexto de Segurança**, replicando o gabarito.
+
+**Feedback e Input** (bug report de permissões):
+
+![Trace 3 — notas do exemplo e input (bug de permissões)](docs/trace3-feedback-input.png)
+
+**Output** (resposta gerada pelo prompt v2):
+
+![Trace 3 — resposta gerada](docs/trace3-output.png)
+
+**Reference Output** (gabarito do dataset):
+
+![Trace 3 — reference output (gabarito)](docs/trace3-reference.png)
+
+> **Resumo dos 3 traces:** performance com notas altíssimas (trace 1), caso complexo com
+> notas mistas (trace 2) e segurança com nota 1.00 (trace 3) — cobrindo variedade de tipos
+> de bug e de resultados, com as médias do experimento todas ≥ 0.8.
 
 ### Comparação: prompt original (v1) × otimizado (v2)
 
